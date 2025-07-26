@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Clone - Test Client</title>
+    <title>WhatsApp Clone - Enhanced Chat App</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
         * {
@@ -23,7 +23,7 @@
 
         .container {
             width: 95%;
-            max-width: 1200px;
+            max-width: 1400px;
             height: 90vh;
             background: white;
             border-radius: 20px;
@@ -34,7 +34,7 @@
 
         /* Sidebar */
         .sidebar {
-            width: 350px;
+            width: 400px;
             background: #f8f9fa;
             border-right: 1px solid #e9ecef;
             display: flex;
@@ -88,6 +88,7 @@
             font-size: 14px;
             font-weight: 500;
             transition: all 0.3s ease;
+            margin: 5px;
         }
 
         .btn-primary {
@@ -102,11 +103,19 @@
         .btn-secondary {
             background: #6c757d;
             color: white;
-            margin-left: 10px;
         }
 
         .btn-secondary:hover {
             background: #495057;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
         }
 
         .btn:disabled {
@@ -114,45 +123,103 @@
             cursor: not-allowed;
         }
 
-        .rooms-section {
+        .tabs {
+            display: flex;
+            background: #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 2px solid #25d366;
+        }
+
+        .tab-content {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
         }
 
-        .rooms-section h4 {
-            margin-bottom: 15px;
-            color: #495057;
+        .tab-panel {
+            display: none;
         }
 
-        .room-item {
-            padding: 12px;
+        .tab-panel.active {
+            display: block;
+        }
+
+        .friend-item, .group-item, .recommended-item {
+            padding: 15px;
             background: white;
             border: 1px solid #e9ecef;
             border-radius: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .room-item:hover {
+        .friend-item:hover, .group-item:hover, .recommended-item:hover {
             background: #f8f9fa;
             border-color: #25d366;
         }
 
-        .room-item.active {
+        .friend-item.active, .group-item.active {
             background: #e8f5e8;
             border-color: #25d366;
         }
 
-        .room-name {
+        .friend-info, .group-info {
+            flex: 1;
+        }
+
+        .friend-name, .group-name {
             font-weight: 500;
             margin-bottom: 4px;
         }
 
-        .room-info {
+        .friend-status, .group-members {
             font-size: 12px;
             color: #6c757d;
+        }
+
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .offline-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6c757d;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
         }
 
         /* Main Chat Area */
@@ -296,7 +363,7 @@
         }
 
         .log {
-            height: 200px;
+            height: 150px;
             overflow-y: auto;
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -322,6 +389,44 @@
 
         .log-entry.info {
             color: #17a2b8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
         }
 
         @keyframes fadeIn {
@@ -374,21 +479,41 @@
                 </div>
                 
                 <div class="input-group">
-                    <label for="roomNameInput">Room Name:</label>
-                    <input type="text" id="roomNameInput" placeholder="Enter room name">
+                    <label for="phoneInput">Phone Number:</label>
+                    <input type="text" id="phoneInput" placeholder="Enter your phone number">
                 </div>
                 
                 <button class="btn btn-primary" id="connectBtn">Connect</button>
                 <button class="btn btn-secondary" id="disconnectBtn" disabled>Disconnect</button>
-                
-                <button class="btn btn-primary" id="createRoomBtn" style="width: 100%; margin-top: 10px;" disabled>Create Room</button>
 
                 <div class="log" id="connectionLog"></div>
             </div>
 
-            <div class="rooms-section">
-                <h4>Available Rooms</h4>
-                <div id="roomsList"></div>
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="friends">Friends</button>
+                <button class="tab" data-tab="groups">Groups</button>
+                <button class="tab" data-tab="recommended">Discover</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Friends Tab -->
+                <div class="tab-panel active" id="friends-panel">
+                    <button class="btn btn-primary btn-small" id="addFriendBtn" style="width: 100%; margin-bottom: 15px;" disabled>Add Friend</button>
+                    <div id="friendsList"></div>
+                </div>
+
+                <!-- Groups Tab -->
+                <div class="tab-panel" id="groups-panel">
+                    <button class="btn btn-primary btn-small" id="createGroupBtn" style="width: 100%; margin-bottom: 15px;" disabled>Create Group</button>
+                    <div id="groupsList"></div>
+                </div>
+
+                <!-- Recommended Tab -->
+                <div class="tab-panel" id="recommended-panel">
+                    <button class="btn btn-secondary btn-small" id="refreshRecommendedBtn" style="width: 100%; margin-bottom: 15px;" disabled>Refresh</button>
+                    <div id="recommendedList"></div>
+                </div>
             </div>
         </div>
 
@@ -396,24 +521,25 @@
         <div class="chat-area">
             <div id="welcomeScreen" class="welcome-screen">
                 <div class="welcome-icon">💬</div>
-                <h2>WhatsApp Clone Test Client</h2>
-                <p>Connect with a username and join a room to start chatting!</p>
+                <h2>Enhanced WhatsApp Clone</h2>
+                <p>Connect with your username and phone number to start chatting!</p>
                 <p style="margin-top: 10px; font-size: 14px;">
-                    <strong>Instructions:</strong><br>
-                    1. Enter your username<br>
-                    2. Click "Connect"<br>
-                    3. Create a room or join an existing one<br>
-                    4. Start chatting!
+                    <strong>Features:</strong><br>
+                    ✓ User registration with phone numbers<br>
+                    ✓ Friends management<br>
+                    ✓ Group chat creation<br>
+                    ✓ Real-time messaging<br>
+                    ✓ Recommended friends
                 </p>
             </div>
 
             <div id="chatInterface" style="display: none; height: 100%; flex-direction: column;">
                 <div class="chat-header">
                     <div>
-                        <div class="chat-title" id="currentRoomName">Select a room</div>
+                        <div class="chat-title" id="currentChatName">Select a chat</div>
                         <div class="typing-indicator" id="typingIndicator"></div>
                     </div>
-                    <button class="btn btn-secondary" id="leaveRoomBtn">Leave Room</button>
+                    <button class="btn btn-secondary" id="leaveChatBtn">Leave Chat</button>
                 </div>
 
                 <div class="messages-container" id="messagesContainer"></div>
@@ -426,49 +552,105 @@
         </div>
     </div>
 
+    <!-- Add Friend Modal -->
+    <div id="addFriendModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Friend</h3>
+                <span class="close" id="closeAddFriendModal">&times;</span>
+            </div>
+            <div class="input-group">
+                <label for="searchUserInput">Search by name or phone:</label>
+                <input type="text" id="searchUserInput" placeholder="Enter name or phone number">
+            </div>
+            <button class="btn btn-primary" id="searchUserBtn">Search</button>
+            <div id="searchResults" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Group</h3>
+                <span class="close" id="closeCreateGroupModal">&times;</span>
+            </div>
+            <div class="input-group">
+                <label for="groupNameInput">Group Name:</label>
+                <input type="text" id="groupNameInput" placeholder="Enter group name">
+            </div>
+            <div class="input-group">
+                <label for="groupDescInput">Description (optional):</label>
+                <input type="text" id="groupDescInput" placeholder="Enter group description">
+            </div>
+            <button class="btn btn-primary" id="createGroupSubmitBtn">Create Group</button>
+        </div>
+    </div>
+
     <script>
-        class WhatsAppClient {
+        class EnhancedWhatsAppClient {
             constructor() {
                 this.socket = null;
                 this.currentUser = null;
-                this.currentRoom = null;
-                this.rooms = [];
+                this.currentChat = null;
+                this.friends = [];
+                this.groups = [];
+                this.recommended = [];
                 this.typingTimeout = null;
                 this.isTyping = false;
+                this.messages = new Map(); // Local storage for messages
                 
                 this.initializeElements();
                 this.bindEvents();
-                this.loadRooms();
+                this.initializeTabs();
+                this.initializeModals();
+                this.loadFromLocalStorage();
             }
 
             initializeElements() {
                 this.elements = {
                     usernameInput: document.getElementById('usernameInput'),
-                    roomNameInput: document.getElementById('roomNameInput'),
+                    phoneInput: document.getElementById('phoneInput'),
                     connectBtn: document.getElementById('connectBtn'),
                     disconnectBtn: document.getElementById('disconnectBtn'),
-                    createRoomBtn: document.getElementById('createRoomBtn'),
-                    roomsList: document.getElementById('roomsList'),
+                    addFriendBtn: document.getElementById('addFriendBtn'),
+                    createGroupBtn: document.getElementById('createGroupBtn'),
+                    refreshRecommendedBtn: document.getElementById('refreshRecommendedBtn'),
+                    friendsList: document.getElementById('friendsList'),
+                    groupsList: document.getElementById('groupsList'),
+                    recommendedList: document.getElementById('recommendedList'),
                     messagesContainer: document.getElementById('messagesContainer'),
                     messageInput: document.getElementById('messageInput'),
                     sendBtn: document.getElementById('sendBtn'),
                     userDisplayName: document.getElementById('userDisplayName'),
                     connectionStatus: document.getElementById('connectionStatus'),
                     connectionLog: document.getElementById('connectionLog'),
-                    currentRoomName: document.getElementById('currentRoomName'),
+                    currentChatName: document.getElementById('currentChatName'),
                     typingIndicator: document.getElementById('typingIndicator'),
-                    leaveRoomBtn: document.getElementById('leaveRoomBtn'),
+                    leaveChatBtn: document.getElementById('leaveChatBtn'),
                     welcomeScreen: document.getElementById('welcomeScreen'),
-                    chatInterface: document.getElementById('chatInterface')
+                    chatInterface: document.getElementById('chatInterface'),
+                    
+                    // Modal elements
+                    addFriendModal: document.getElementById('addFriendModal'),
+                    createGroupModal: document.getElementById('createGroupModal'),
+                    searchUserInput: document.getElementById('searchUserInput'),
+                    searchUserBtn: document.getElementById('searchUserBtn'),
+                    searchResults: document.getElementById('searchResults'),
+                    groupNameInput: document.getElementById('groupNameInput'),
+                    groupDescInput: document.getElementById('groupDescInput'),
+                    createGroupSubmitBtn: document.getElementById('createGroupSubmitBtn')
                 };
             }
 
             bindEvents() {
                 this.elements.connectBtn.addEventListener('click', () => this.connect());
                 this.elements.disconnectBtn.addEventListener('click', () => this.disconnect());
-                this.elements.createRoomBtn.addEventListener('click', () => this.createRoom());
+                this.elements.addFriendBtn.addEventListener('click', () => this.showAddFriendModal());
+                this.elements.createGroupBtn.addEventListener('click', () => this.showCreateGroupModal());
+                this.elements.refreshRecommendedBtn.addEventListener('click', () => this.loadRecommendedFriends());
                 this.elements.sendBtn.addEventListener('click', () => this.sendMessage());
-                this.elements.leaveRoomBtn.addEventListener('click', () => this.leaveRoom());
+                this.elements.leaveChatBtn.addEventListener('click', () => this.leaveChat());
                 
                 this.elements.messageInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') this.sendMessage();
@@ -481,29 +663,100 @@
                     if (e.key === 'Enter') this.connect();
                 });
                 
-                this.elements.roomNameInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.createRoom();
+                this.elements.phoneInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.connect();
+                });
+
+                // Modal events
+                this.elements.searchUserBtn.addEventListener('click', () => this.searchUsers());
+                this.elements.createGroupSubmitBtn.addEventListener('click', () => this.createGroup());
+            }
+
+            initializeTabs() {
+                const tabs = document.querySelectorAll('.tab');
+                const panels = document.querySelectorAll('.tab-panel');
+
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const targetTab = tab.dataset.tab;
+                        
+                        // Remove active class from all tabs and panels
+                        tabs.forEach(t => t.classList.remove('active'));
+                        panels.forEach(p => p.classList.remove('active'));
+                        
+                        // Add active class to clicked tab and corresponding panel
+                        tab.classList.add('active');
+                        document.getElementById(`${targetTab}-panel`).classList.add('active');
+                    });
                 });
             }
 
-            connect() {
+            initializeModals() {
+                // Close modal events
+                document.getElementById('closeAddFriendModal').addEventListener('click', () => {
+                    this.elements.addFriendModal.style.display = 'none';
+                });
+                
+                document.getElementById('closeCreateGroupModal').addEventListener('click', () => {
+                    this.elements.createGroupModal.style.display = 'none';
+                });
+
+                // Close modal when clicking outside
+                window.addEventListener('click', (e) => {
+                    if (e.target === this.elements.addFriendModal) {
+                        this.elements.addFriendModal.style.display = 'none';
+                    }
+                    if (e.target === this.elements.createGroupModal) {
+                        this.elements.createGroupModal.style.display = 'none';
+                    }
+                });
+            }
+
+            loadFromLocalStorage() {
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    this.currentUser = JSON.parse(savedUser);
+                    this.elements.usernameInput.value = this.currentUser.user_name || '';
+                    this.elements.phoneInput.value = this.currentUser.phone_number || '';
+                }
+
+                const savedMessages = localStorage.getItem('chatMessages');
+                if (savedMessages) {
+                    this.messages = new Map(JSON.parse(savedMessages));
+                }
+            }
+
+            saveToLocalStorage() {
+                if (this.currentUser) {
+                    localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                }
+                localStorage.setItem('chatMessages', JSON.stringify([...this.messages]));
+            }
+
+            async connect() {
                 const username = this.elements.usernameInput.value.trim();
-                if (!username) {
-                    alert('Please enter a username');
+                const phone = this.elements.phoneInput.value.trim();
+                
+                if (!username || !phone) {
+                    alert('Please enter both username and phone number');
                     return;
                 }
 
-                this.socket = io('http://localhost:3090');
-                
-                // Create user object with just username - server will generate ID
-                this.currentUser = {
-                    username: username
-                };
-
-                this.bindSocketEvents();
-                
-                this.socket.emit('user_connected', this.currentUser);
-                this.log('Connecting...', 'info');
+                try {
+                    this.socket = io('http://localhost:3090');
+                    this.bindSocketEvents();
+                    
+                    // Try to connect with existing user or register new user
+                    this.socket.emit('user_connected', {
+                        user_id: this.currentUser?.user_id,
+                        user_name: username,
+                        phone_number: phone
+                    });
+                    
+                    this.log('Connecting...', 'info');
+                } catch (error) {
+                    this.log(`Connection error: ${error.message}`, 'error');
+                }
             }
 
             bindSocketEvents() {
@@ -518,49 +771,57 @@
                 });
 
                 this.socket.on('user_connected_success', (data) => {
-                    // Update current user with the ID provided by server
-                    this.currentUser.id = data.userId;
-                    this.log(`Connected as ${data.username}`, 'success');
-                    this.updateUserInfo(data.username, true);
-                    this.loadRooms();
+                    this.currentUser = data.user;
+                    this.friends = data.friends || [];
+                    this.groups = data.groups || [];
+                    
+                    this.log(`Connected as ${data.user.user_name}`, 'success');
+                    this.updateUserInfo(data.user.user_name, true);
+                    this.displayFriends();
+                    this.displayGroups();
+                    this.loadRecommendedFriends();
+                    this.saveToLocalStorage();
                 });
 
-                this.socket.on('room_joined', (data) => {
-                    this.currentRoom = data;
-                    this.log(`Successfully joined room: ${data.roomName}`, 'success');
-                    console.log('Room joined data:', data);
+                this.socket.on('chat_joined', (data) => {
+                    this.currentChat = data;
+                    this.log(`Joined ${data.chat_type} chat`, 'success');
                     this.showChatInterface();
                     this.loadMessages(data.messages || []);
                 });
 
-                this.socket.on('room_left', (data) => {
-                    this.log(`Left room: ${data.roomName}`, 'info');
-                    this.currentRoom = null;
+                this.socket.on('chat_left', (data) => {
+                    this.log(`Left ${data.chat_type} chat`, 'info');
+                    this.currentChat = null;
                     this.showWelcomeScreen();
-                    this.loadRooms();
                 });
 
                 this.socket.on('new_message', (message) => {
                     this.displayMessage(message);
+                    this.storeMessage(message);
                     this.scrollToBottom();
                 });
 
-                this.socket.on('user_joined_room', (data) => {
-                    this.log(`${data.username} joined the room`, 'info');
+                this.socket.on('user_joined_chat', (data) => {
+                    this.log(`User joined the chat`, 'info');
                 });
 
-                this.socket.on('user_left_room', (data) => {
-                    this.log(`${data.username} left the room`, 'info');
+                this.socket.on('user_left_chat', (data) => {
+                    this.log(`User left the chat`, 'info');
                 });
 
                 this.socket.on('user_typing', (data) => {
-                    if (data.userId !== this.currentUser.id) {
+                    if (data.user_id !== this.currentUser?.user_id) {
                         if (data.isTyping) {
-                            this.elements.typingIndicator.textContent = `${data.username} is typing...`;
+                            this.elements.typingIndicator.textContent = `${data.user_name} is typing...`;
                         } else {
                             this.elements.typingIndicator.textContent = '';
                         }
                     }
+                });
+
+                this.socket.on('friend_status_changed', (data) => {
+                    this.updateFriendStatus(data);
                 });
 
                 this.socket.on('error', (error) => {
@@ -574,116 +835,371 @@
                     this.socket = null;
                 }
                 this.currentUser = null;
-                this.currentRoom = null;
+                this.currentChat = null;
+                this.friends = [];
+                this.groups = [];
+                this.recommended = [];
                 this.updateConnectionStatus(false);
                 this.updateUserInfo('Not Connected', false);
                 this.showWelcomeScreen();
                 this.log('Disconnected', 'info');
+                localStorage.removeItem('currentUser');
             }
 
-            async createRoom() {
-                const roomName = this.elements.roomNameInput.value.trim();
-                if (!roomName || !this.currentUser) {
-                    alert('Please enter a room name and make sure you\'re connected');
+            async loadRecommendedFriends() {
+                if (!this.currentUser) return;
+
+                try {
+                    const response = await fetch(`http://localhost:3090/api/users/${this.currentUser.user_id}/recommended`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.recommended = data.data;
+                        this.displayRecommended();
+                        this.log('Recommended friends loaded', 'success');
+                    } else {
+                        this.log(`Failed to load recommended friends: ${data.message}`, 'error');
+                    }
+                } catch (error) {
+                    this.log(`Error loading recommended friends: ${error.message}`, 'error');
+                }
+            }
+
+            displayFriends() {
+                this.elements.friendsList.innerHTML = '';
+                
+                this.friends.forEach(friend => {
+                    const friendElement = document.createElement('div');
+                    friendElement.className = 'friend-item';
+                    
+                    const onlineIndicator = friend.online ? 'online-indicator' : 'offline-indicator';
+                    const statusText = friend.online ? 'Online' : `Last seen: ${new Date(friend.last_seen).toLocaleString()}`;
+                    
+                    friendElement.innerHTML = `
+                        <div class="friend-info">
+                            <div class="friend-name">
+                                <span class="${onlineIndicator}"></span>
+                                ${friend.user_name}
+                            </div>
+                            <div class="friend-status">${statusText}</div>
+                            <div class="friend-status">${friend.phone_number}</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-small chat-btn" data-friend-id="${friend.user_id}">Chat</button>
+                            <button class="btn btn-danger btn-small remove-btn" data-friend-id="${friend.user_id}">Remove</button>
+                        </div>
+                    `;
+                    
+                    // Add event listeners
+                    friendElement.querySelector('.chat-btn').addEventListener('click', () => {
+                        this.startDirectChat(friend);
+                    });
+                    
+                    friendElement.querySelector('.remove-btn').addEventListener('click', () => {
+                        this.removeFriend(friend.user_id);
+                    });
+                    
+                    this.elements.friendsList.appendChild(friendElement);
+                });
+            }
+
+            displayGroups() {
+                this.elements.groupsList.innerHTML = '';
+                
+                this.groups.forEach(group => {
+                    const groupElement = document.createElement('div');
+                    groupElement.className = 'group-item';
+                    
+                    groupElement.innerHTML = `
+                        <div class="group-info">
+                            <div class="group-name">${group.group_name}</div>
+                            <div class="group-members">${group.group_description || 'No description'}</div>
+                            <div class="group-members">Role: ${group.user_role}</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-small chat-btn" data-group-id="${group.group_id}">Open</button>
+                            <button class="btn btn-danger btn-small leave-btn" data-group-id="${group.group_id}">Leave</button>
+                        </div>
+                    `;
+                    
+                    // Add event listeners
+                    groupElement.querySelector('.chat-btn').addEventListener('click', () => {
+                        this.openGroupChat(group);
+                    });
+                    
+                    groupElement.querySelector('.leave-btn').addEventListener('click', () => {
+                        this.leaveGroup(group.group_id);
+                    });
+                    
+                    this.elements.groupsList.appendChild(groupElement);
+                });
+            }
+
+            displayRecommended() {
+                this.elements.recommendedList.innerHTML = '';
+                
+                this.recommended.forEach(user => {
+                    const userElement = document.createElement('div');
+                    userElement.className = 'recommended-item';
+                    
+                    const onlineIndicator = user.online ? 'online-indicator' : 'offline-indicator';
+                    const statusText = user.online ? 'Online' : `Last seen: ${new Date(user.last_seen).toLocaleString()}`;
+                    
+                    userElement.innerHTML = `
+                        <div class="friend-info">
+                            <div class="friend-name">
+                                <span class="${onlineIndicator}"></span>
+                                ${user.user_name}
+                            </div>
+                            <div class="friend-status">${statusText}</div>
+                            <div class="friend-status">${user.phone_number}</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-small add-btn" data-user-id="${user.user_id}">Add Friend</button>
+                        </div>
+                    `;
+                    
+                    // Add event listener
+                    userElement.querySelector('.add-btn').addEventListener('click', () => {
+                        this.addFriend(user.user_id);
+                    });
+                    
+                    this.elements.recommendedList.appendChild(userElement);
+                });
+            }
+
+            showAddFriendModal() {
+                this.elements.addFriendModal.style.display = 'block';
+                this.elements.searchUserInput.value = '';
+                this.elements.searchResults.innerHTML = '';
+            }
+
+            showCreateGroupModal() {
+                this.elements.createGroupModal.style.display = 'block';
+                this.elements.groupNameInput.value = '';
+                this.elements.groupDescInput.value = '';
+            }
+
+            async searchUsers() {
+                const query = this.elements.searchUserInput.value.trim();
+                if (!query) {
+                    alert('Please enter a search term');
                     return;
                 }
 
                 try {
-                    const response = await fetch('http://localhost:3090/api/rooms', {
+                    const response = await fetch(`http://localhost:3090/api/users/search/${encodeURIComponent(query)}?exclude=${this.currentUser.user_id}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.displaySearchResults(data.data);
+                    } else {
+                        this.elements.searchResults.innerHTML = '<p>No users found</p>';
+                    }
+                } catch (error) {
+                    this.log(`Search error: ${error.message}`, 'error');
+                }
+            }
+
+            displaySearchResults(users) {
+                this.elements.searchResults.innerHTML = '';
+                
+                if (users.length === 0) {
+                    this.elements.searchResults.innerHTML = '<p>No users found</p>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const userElement = document.createElement('div');
+                    userElement.className = 'friend-item';
+                    userElement.style.marginBottom = '10px';
+                    
+                    const isAlreadyFriend = this.friends.some(f => f.user_id === user.user_id);
+                    
+                    userElement.innerHTML = `
+                        <div class="friend-info">
+                            <div class="friend-name">${user.user_name}</div>
+                            <div class="friend-status">${user.phone_number}</div>
+                        </div>
+                        <div class="action-buttons">
+                            ${isAlreadyFriend ? 
+                                '<span style="color: #28a745;">Already friends</span>' : 
+                                `<button class="btn btn-primary btn-small add-btn" data-user-id="${user.user_id}">Add Friend</button>`
+                            }
+                        </div>
+                    `;
+                    
+                    if (!isAlreadyFriend) {
+                        userElement.querySelector('.add-btn').addEventListener('click', () => {
+                            this.addFriend(user.user_id);
+                            this.elements.addFriendModal.style.display = 'none';
+                        });
+                    }
+                    
+                    this.elements.searchResults.appendChild(userElement);
+                });
+            }
+
+            async addFriend(friendId) {
+                try {
+                    const response = await fetch(`http://localhost:3090/api/users/${this.currentUser.user_id}/friends`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ friend_id: friendId })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.friends.push(data.data);
+                        this.displayFriends();
+                        this.loadRecommendedFriends(); // Refresh recommended list
+                        this.log('Friend added successfully', 'success');
+                    } else {
+                        this.log(`Failed to add friend: ${data.message}`, 'error');
+                    }
+                } catch (error) {
+                    this.log(`Error adding friend: ${error.message}`, 'error');
+                }
+            }
+
+            async removeFriend(friendId) {
+                if (!confirm('Are you sure you want to remove this friend?')) return;
+
+                try {
+                    const response = await fetch(`http://localhost:3090/api/users/${this.currentUser.user_id}/friends/${friendId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.friends = this.friends.filter(f => f.user_id !== friendId);
+                        this.displayFriends();
+                        this.loadRecommendedFriends(); // Refresh recommended list
+                        this.log('Friend removed successfully', 'success');
+                    } else {
+                        this.log(`Failed to remove friend: ${data.message}`, 'error');
+                    }
+                } catch (error) {
+                    this.log(`Error removing friend: ${error.message}`, 'error');
+                }
+            }
+
+            async createGroup() {
+                const groupName = this.elements.groupNameInput.value.trim();
+                const groupDesc = this.elements.groupDescInput.value.trim();
+                
+                if (!groupName) {
+                    alert('Please enter a group name');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('http://localhost:3090/api/groups', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            roomName: roomName,
-                            userId: this.currentUser.id
+                            group_name: groupName,
+                            group_description: groupDesc,
+                            created_by: this.currentUser.user_id
                         })
                     });
 
                     const data = await response.json();
+                    
                     if (data.success) {
-                        this.log(`Created room: ${roomName}`, 'success');
-                        this.elements.roomNameInput.value = '';
-                        this.loadRooms();
+                        // Add the new group to the list with user role as admin
+                        const newGroup = {
+                            ...data.data,
+                            user_role: 'admin'
+                        };
+                        this.groups.push(newGroup);
+                        this.displayGroups();
+                        this.elements.createGroupModal.style.display = 'none';
+                        this.log('Group created successfully', 'success');
                     } else {
-                        this.log(`Failed to create room: ${data.message}`, 'error');
+                        this.log(`Failed to create group: ${data.message}`, 'error');
                     }
                 } catch (error) {
-                    this.log(`Error creating room: ${error.message}`, 'error');
+                    this.log(`Error creating group: ${error.message}`, 'error');
                 }
             }
 
-            async loadRooms() {
+            async leaveGroup(groupId) {
+                if (!confirm('Are you sure you want to leave this group?')) return;
+
                 try {
-                    const response = await fetch('http://localhost:3090/api/rooms');
+                    const response = await fetch(`http://localhost:3090/api/groups/${groupId}/leave`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: this.currentUser.user_id })
+                    });
+
                     const data = await response.json();
                     
                     if (data.success) {
-                        this.rooms = data.rooms;
-                        this.displayRooms();
+                        this.groups = this.groups.filter(g => g.group_id !== groupId);
+                        this.displayGroups();
+                        this.log('Left group successfully', 'success');
+                    } else {
+                        this.log(`Failed to leave group: ${data.message}`, 'error');
                     }
                 } catch (error) {
-                    this.log(`Error loading rooms: ${error.message}`, 'error');
+                    this.log(`Error leaving group: ${error.message}`, 'error');
                 }
             }
 
-            displayRooms() {
-                this.elements.roomsList.innerHTML = '';
-                
-                this.rooms.forEach(room => {
-                    const roomElement = document.createElement('div');
-                    roomElement.className = 'room-item';
-                    if (this.currentRoom && this.currentRoom.roomId === room.id) {
-                        roomElement.classList.add('active');
-                    }
-                    
-                    roomElement.innerHTML = `
-                        <div class="room-name">${room.name}</div>
-                        <div class="room-info">${room.participantCount} participants</div>
-                    `;
-                    
-                    roomElement.addEventListener('click', () => this.joinRoom(room.id, room.name));
-                    this.elements.roomsList.appendChild(roomElement);
-                });
-            }
-
-            joinRoom(roomId, roomName) {
-                if (!this.socket || !this.currentUser) {
+            startDirectChat(friend) {
+                if (!this.socket) {
                     alert('Please connect first');
                     return;
                 }
 
-                this.log(`Attempting to join room: ${roomName}`, 'info');
-                console.log('Joining room with data:', {
-                    roomId: roomId,
-                    userId: this.currentUser.id,
-                    username: this.currentUser.username
+                // Create deterministic chat ID for direct chat
+                const chatId = `direct_${Math.min(this.currentUser.user_id, friend.user_id)}_${Math.max(this.currentUser.user_id, friend.user_id)}`;
+                
+                this.socket.emit('join_chat', {
+                    chat_id: chatId,
+                    chat_type: 'direct'
                 });
 
-                this.socket.emit('join_room', {
-                    roomId: roomId,
-                    userId: this.currentUser.id,
-                    username: this.currentUser.username
-                });
+                this.elements.currentChatName.textContent = friend.user_name;
             }
 
-            leaveRoom() {
-                if (!this.socket || !this.currentRoom) return;
+            openGroupChat(group) {
+                if (!this.socket) {
+                    alert('Please connect first');
+                    return;
+                }
 
-                this.socket.emit('leave_room', {
-                    roomId: this.currentRoom.roomId,
-                    userId: this.currentUser.id,
-                    username: this.currentUser.username
+                this.socket.emit('join_chat', {
+                    chat_id: `group_${group.group_id}`,
+                    chat_type: 'group'
+                });
+
+                this.elements.currentChatName.textContent = group.group_name;
+            }
+
+            leaveChat() {
+                if (!this.socket || !this.currentChat) return;
+
+                this.socket.emit('leave_chat', {
+                    chat_id: this.currentChat.chat_id,
+                    chat_type: this.currentChat.chat_type
                 });
             }
 
             sendMessage() {
                 const message = this.elements.messageInput.value.trim();
-                if (!message || !this.socket || !this.currentRoom || !this.currentUser) return;
+                if (!message || !this.socket || !this.currentChat || !this.currentUser) return;
 
                 this.socket.emit('send_message', {
-                    roomId: this.currentRoom.roomId,
+                    chat_id: this.currentChat.chat_id,
                     message: message,
-                    userId: this.currentUser.id,
-                    username: this.currentUser.username
+                    user_id: this.currentUser.user_id,
+                    user_name: this.currentUser.user_name,
+                    message_type: 'text'
                 });
 
                 this.elements.messageInput.value = '';
@@ -691,14 +1207,12 @@
             }
 
             handleTyping() {
-                if (!this.socket || !this.currentRoom) return;
+                if (!this.socket || !this.currentChat) return;
 
                 if (!this.isTyping) {
                     this.isTyping = true;
                     this.socket.emit('typing_start', {
-                        roomId: this.currentRoom.roomId,
-                        userId: this.currentUser.id,
-                        username: this.currentUser.username
+                        chat_id: this.currentChat.chat_id
                     });
                 }
 
@@ -709,19 +1223,31 @@
             }
 
             stopTyping() {
-                if (this.isTyping && this.socket && this.currentRoom) {
+                if (this.isTyping && this.socket && this.currentChat) {
                     this.isTyping = false;
                     this.socket.emit('typing_stop', {
-                        roomId: this.currentRoom.roomId,
-                        userId: this.currentUser.id,
-                        username: this.currentUser.username
+                        chat_id: this.currentChat.chat_id
                     });
                 }
             }
 
             loadMessages(messages) {
                 this.elements.messagesContainer.innerHTML = '';
-                messages.forEach(message => this.displayMessage(message));
+                
+                // Load from local storage first
+                const chatId = this.currentChat.chat_id;
+                const localMessages = this.messages.get(chatId) || [];
+                
+                // Merge with server messages (server messages take precedence)
+                const allMessages = [...localMessages, ...messages];
+                const uniqueMessages = allMessages.filter((message, index, self) => 
+                    index === self.findIndex(m => m.message_id === message.message_id)
+                );
+                
+                // Sort by timestamp
+                uniqueMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                
+                uniqueMessages.forEach(message => this.displayMessage(message));
                 this.scrollToBottom();
             }
 
@@ -729,7 +1255,7 @@
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message';
                 
-                const isOwn = this.currentUser && message.userId === this.currentUser.id;
+                const isOwn = this.currentUser && message.user_id === this.currentUser.user_id;
                 if (isOwn) messageElement.classList.add('own');
 
                 const time = new Date(message.timestamp).toLocaleTimeString([], {
@@ -739,13 +1265,44 @@
 
                 messageElement.innerHTML = `
                     <div class="message-bubble">
-                        ${!isOwn ? `<div class="message-header">${message.username}</div>` : ''}
+                        ${!isOwn ? `<div class="message-header">${message.user_name}</div>` : ''}
                         <div class="message-text">${this.escapeHtml(message.message)}</div>
                         <div class="message-time">${time}</div>
                     </div>
                 `;
 
                 this.elements.messagesContainer.appendChild(messageElement);
+            }
+
+            storeMessage(message) {
+                const chatId = message.chat_id;
+                if (!this.messages.has(chatId)) {
+                    this.messages.set(chatId, []);
+                }
+                
+                const chatMessages = this.messages.get(chatId);
+                
+                // Check if message already exists
+                const existingIndex = chatMessages.findIndex(m => m.message_id === message.message_id);
+                if (existingIndex === -1) {
+                    chatMessages.push(message);
+                    
+                    // Keep only last 1000 messages per chat
+                    if (chatMessages.length > 1000) {
+                        chatMessages.shift();
+                    }
+                    
+                    this.saveToLocalStorage();
+                }
+            }
+
+            updateFriendStatus(data) {
+                const friend = this.friends.find(f => f.user_id === data.user_id);
+                if (friend) {
+                    friend.online = data.online;
+                    friend.last_seen = data.last_seen;
+                    this.displayFriends();
+                }
             }
 
             scrollToBottom() {
@@ -755,7 +1312,7 @@
             showWelcomeScreen() {
                 this.elements.welcomeScreen.style.display = 'flex';
                 this.elements.chatInterface.style.display = 'none';
-                this.elements.currentRoomName.textContent = 'Select a room';
+                this.elements.currentChatName.textContent = 'Select a chat';
                 this.elements.messageInput.disabled = true;
                 this.elements.sendBtn.disabled = true;
             }
@@ -763,18 +1320,18 @@
             showChatInterface() {
                 this.elements.welcomeScreen.style.display = 'none';
                 this.elements.chatInterface.style.display = 'flex';
-                this.elements.currentRoomName.textContent = this.currentRoom.roomName;
                 this.elements.messageInput.disabled = false;
                 this.elements.sendBtn.disabled = false;
                 this.elements.messageInput.focus();
-                this.displayRooms();
             }
 
             updateConnectionStatus(connected) {
                 this.elements.connectionStatus.textContent = connected ? 'Connected' : 'Disconnected';
                 this.elements.connectBtn.disabled = connected;
                 this.elements.disconnectBtn.disabled = !connected;
-                this.elements.createRoomBtn.disabled = !connected;
+                this.elements.addFriendBtn.disabled = !connected;
+                this.elements.createGroupBtn.disabled = !connected;
+                this.elements.refreshRecommendedBtn.disabled = !connected;
                 
                 const userInfo = document.querySelector('.user-info');
                 userInfo.className = `user-info ${connected ? 'connected' : 'disconnected'}`;
@@ -804,7 +1361,7 @@
 
         // Initialize the client when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            new WhatsAppClient();
+            new EnhancedWhatsAppClient();
         });
     </script>
 </body>

@@ -20,10 +20,13 @@
     "author": "Wisdom. A",
     "license": "MIT",
     "dependencies": {
+        "@supabase/supabase-js": "^2.52.1",
         "cors": "^2.8.5",
+        "dotenv": "^17.2.1",
         "express": "^4.21.2",
         "http": "^0.0.1-security",
-        "socket.io": "^4.8.1"
+        "socket.io": "^4.8.1",
+        "supabase": "^2.31.8"
     },
     "devDependencies": {
         "nodemon": "^3.0.1"
